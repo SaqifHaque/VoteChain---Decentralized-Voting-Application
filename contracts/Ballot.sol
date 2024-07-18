@@ -20,7 +20,18 @@ contract Ballot {
 
   address public chairperson;
 
-  
+  constructor(bytes32[] memory proposalNames) {
 
+    chairperson = msg.sender;
+
+    voters[chairperson].weight = 1;
+
+    for(uint i=0; i < proposalNames.length; i++) {
+      proposals.push(Proposal({
+        name: proposalNames[i],
+        voteCount: 0
+      }));
+    }
+  }
 
 }
