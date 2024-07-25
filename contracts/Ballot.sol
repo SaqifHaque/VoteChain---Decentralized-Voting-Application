@@ -69,11 +69,7 @@ contract Ballot {
   }
 
   function winningName() public view returns (bytes32 winningName_) {
-    proposals[winningProposal()].name;
+    winningName_ = proposals[winningProposal()].name;
   }
-
-  
-  
-
 
 }
