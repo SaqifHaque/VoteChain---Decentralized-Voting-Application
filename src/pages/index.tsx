@@ -3,43 +3,64 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import { abi } from '../../data.json';
-import { useReadContract } from 'wagmi'
-import { useState } from 'react';
+import { useReadContract, useWriteContract } from 'wagmi'
+import { useState, useEffect } from 'react';
+import React from 'react';
 
 const Home: NextPage = () => {
-  const [votingStatus, setVotingStatus] = useState(true);
-  const [remainingTime, setRemainingTime] = useState(0);
-  const [candidates, setCandidates] = useState([]);
+  //const [votingStatus, setVotingStatus] = useState(true);
+  //const [remainingTime, setRemainingTime] = useState(0);
+  //const [candidates, setCandidates] = useState([]);
   const [number, setNumber] = useState('');
   const [CanVote, setCanVote] = useState(true);
+  const { writeContract } = useWriteContract();
 
-  const getVotingStatus = () => {
-    const { data } = useReadContract({
+  const { data: votingStatus } = useReadContract({
+    abi,
+    address: '0x4C157380A7FC150c7258c4E5C0DDAf480b329E5B',
+    functionName: 'getVotingStatus',
+  })
+
+  const { data:  candidates = []} = useReadContract({
+    abi,
+    address: '0x4C157380A7FC150c7258c4E5C0DDAf480b329E5B',
+    functionName: 'getAllVotesOfCandiates',
+  })
+
+  const { data:  remainingTime} = useReadContract({
+    abi,
+    address: '0x4C157380A7FC150c7258c4E5C0DDAf480b329E5B',
+    functionName: 'getRemainingTime',
+  })
+
+  const addCandidate = (candidateName: string) => {
+    writeContract({ 
       abi,
-      address: '0x4C157380A7FC150c7258c4E5C0DDAf480b329E5B',
-      functionName: 'getVotingStatus',
-    })
-
-    setVotingStatus(data as boolean);
+      address: '0x6b175474e89094c44da98b954eedeac495271d0f',
+      functionName: 'addCandidates',
+      args: [candidateName],
+   })
   }
 
-  const getRemaningTime = () => {
-    const { data } = useReadContract({
+  const vote = (candidateIndex: number) => {
+    writeContract({ 
       abi,
-      address: '0x4C157380A7FC150c7258c4E5C0DDAf480b329E5B',
-      functionName: 'getRemainingTime',
-    })
-
-    setRemainingTime(parseInt(data as string, 16));
+      address: '0x6b175474e89094c44da98b954eedeac495271d0f',
+      functionName: 'vote',
+      args: [number],
+   })
   }
 
-  const getCandidates = () => {
-    const { data } = useReadContract({
-      abi,
-      address: '0x4C157380A7FC150c7258c4E5C0DDAf480b329E5B',
-      functionName: 'getRemainingTime',
-    })
-  }
+
+
+  useEffect(() => {
+    console.log("__________________________");
+    console.log("useContractReadData", votingStatus);
+    console.log('candidates', candidates);
+    console.log(remainingTime, 'time');
+    console.log("__________________________");
+  }, [votingStatus, candidates]);
+
   
 
 
@@ -56,7 +77,42 @@ const Home: NextPage = () => {
 
       <main className={styles.main}>
         <ConnectButton />
+        {candidates && (
+          candidates.map((candidate) => (
+            <div className="flex flex-col flex-wrap gap: 10px; items-center justify-center max-w-xs p-4 m-5 border-2 border-black bg-gray-200">
+              <p className="m-0 text-3xl font-bold text-purple-700 font-kalam">{candidate.name}</p>
+              <i
+                data-icon="ei-user"
+                data-size="l"
+                className="w-28 h-20 mt-0 bg-white border-b-0 border-2 border-black fill-current text-purple-700"
+              ></i>
+              <p
+                // className={`flex items-center justify-center w-24 m-0 font-bold border-t-0 border-2 border-black bg-purple-700 ${
+                //   this.state.count > 10 ? 'text-green-300' : 'text-yellow-300'
+                // }`}
+              >
+                {/* {this.state.count} */}
+                <i
+                  data-icon="ei-like"
+                  data-size="s"
+                  className="flex w-6 h-6 ml-1"
+                ></i>
+              </p>
+              <div className="flex flex-wrap justify-around w-36 mt-2">
+                <button
+                  className="w-10 p-1 text-sm font-bold text-black bg-green-500 border-2 border-black cursor-pointer font-kalam"
+                  //onClick={this.increaseCount}
+                >
+                  Vote
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </main>
+
+
+      {/* <button onClick={getVotingStatus}>Test</button> */}
 
       <footer className={styles.footer}>
         <a href="https://rainbow.me" rel="noopener noreferrer" target="_blank">
